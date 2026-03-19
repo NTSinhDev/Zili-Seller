@@ -1,0 +1,128 @@
+// List Screen Template với Tabs - Sử dụng ListScreenTemplate pattern
+// LƯU Ý: File này chứa template variables ({{ClassName}}, {{class_name}}, etc.)
+// Các lỗi linter là bình thường và sẽ biến mất sau khi replace placeholders
+
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import '../../bloc/{{class_name}}/{{class_name}}_cubit.dart';
+import '../../bloc/base_cubit.dart';
+import '../../data/models/{{domain}}/{{class_name}}.dart';
+import '../../data/repositories/{{class_name}}_repository.dart';
+import '../../di/dependency_injection.dart';
+import '../../res/res.dart';
+import '../../utils/extension/extension.dart';
+import '../../utils/widgets/widgets.dart';
+import '../common/list_screen_template.dart';
+
+class {{ClassName}}ListScreen extends StatefulWidget {
+  const {{ClassName}}ListScreen({super.key});
+  static String keyName = '/{{class_name}}_list';
+
+  @override
+  State<{{ClassName}}ListScreen> createState() => _{{ClassName}}ListScreenState();
+}
+
+class _{{ClassName}}ListScreenState extends State<{{ClassName}}ListScreen> {
+  // Repository và Cubit (inject từ DI)
+  final {{ClassName}}Repository _repository = di<{{ClassName}}Repository>();
+  final {{ClassName}}Cubit _cubit = di<{{ClassName}}Cubit>();
+  int _currentTabIndex = 0;
+  String? _currentKeyword;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListScreenTemplate<{{ClassName}}>(
+      // Required parameters
+      appBarTitle: 'Danh sách {{DisplayName}}',
+      searchHint: 'Tìm kiếm theo tên, code...',
+      
+      // Tabs configuration
+      tabs: [
+        TabConfig(label: 'Tất cả'),
+        TabConfig(
+          label: 'Mới',
+          // badgeStream: _repository.new{{ClassName}}sCounter.stream, // Optional - uncomment nếu có
+          // hasPermission: () => PermissionHelper.view(AbilitySubject.{{class_name}}), // Optional
+        ),
+        TabConfig(label: 'Đang xử lý'),
+      ],
+      initialTabIndex: _currentTabIndex,
+      onTabChanged: (index) {
+        setState(() {
+          _currentTabIndex = index;
+        });
+        // Reload data cho tab mới
+        _cubit.loadDataForTab(
+          tabIndex: index,
+          keyword: _currentKeyword,
+        );
+      },
+      
+      // List configuration
+      dataStream: _repository.{{class_name}}sStream,
+      totalCount: _repository.total{{ClassName}}s,
+      itemBuilder: (context, item, index) {
+        return Container(
+          margin: EdgeInsets.symmetric(horizontal: 16.w),
+          padding: EdgeInsets.all(10.w),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(10.r),
+            border: Border.all(color: AppColors.greyC0),
+          ),
+          child: _{{ClassName}}ItemCard(item: item),
+        );
+      },
+      emptyMessage: 'Không tìm thấy {{DisplayName}}',
+      
+      // Callbacks (REQUIRED)
+      onSearch: (keyword) {
+        _currentKeyword = keyword;
+        _cubit.filter{{ClassName}}s(keyword: keyword);
+      },
+      onRefresh: () async {
+        await _cubit.loadDataForTab(
+          tabIndex: _currentTabIndex,
+          offset: 0,
+          keyword: _currentKeyword,
+        );
+      },
+      onLoadMore: () {
+        final current = _repository.{{class_name}}s;
+        if (current.length >= _repository.total{{ClassName}}s) return true;
+        _cubit.loadMore{{ClassName}}s(
+          tabIndex: _currentTabIndex,
+          offset: current.length,
+          keyword: _currentKeyword,
+        );
+        return true;
+      },
+    );
+  }
+}
+
+/// Item Card Widget
+class _{{ClassName}}ItemCard extends StatelessWidget {
+  final {{ClassName}} item;
+
+  const _{{ClassName}}ItemCard({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // TODO: Customize item display
+        Text(
+          item.name ?? item.id ?? 'N/A',
+          style: AppStyles.text.semiBold(
+            fSize: 16.sp,
+            color: AppColors.black3,
+          ),
+        ),
+        // Thêm các fields khác của item ở đây
+      ],
+    );
+  }
+}

@@ -1,0 +1,62 @@
+// Service Template - Copy và customize cho feature mới
+// LƯU Ý: File này chứa template variables ({{ClassName}}, {{class_name}}, etc.)
+// Các lỗi linter là bình thường và sẽ biến mất sau khi replace placeholders
+
+import 'package:zili_coffee/data/repositories/{{class_name}}_repository.dart';
+import 'package:zili_coffee/di/dependency_injection.dart';
+
+class {{ClassName}}Service {
+  final {{ClassName}}Repository _repository = di<{{ClassName}}Repository>();
+
+  {{ClassName}}Service();
+
+  /// Get list of {{class_name}}s
+  /// 
+  /// Business logic: Validate, transform, coordinate repositories
+  Future<List<{{ClassName}}>> get{{ClassName}}s({
+    String? keyword,
+    int limit = 10,
+    int offset = 0,
+  }) async {
+    // TODO: Add business logic, validation, transformation
+    // Example: Filter, sort, validate permissions, etc.
+    return _repository.{{class_name}}s.valueOrNull ?? [];
+  }
+
+  /// Get {{class_name}} by ID
+  Future<{{ClassName}}?> get{{ClassName}}ById(String id) async {
+    // TODO: Add business logic
+    final items = _repository.{{class_name}}s.valueOrNull ?? [];
+    return items.firstWhere(
+      (item) => item.id == id,
+      orElse: () => throw Exception('{{ClassName}} not found'),
+    );
+  }
+
+  /// Create {{class_name}}
+  /// 
+  /// Business logic: Validate data before creating
+  Future<bool> create{{ClassName}}(Map<String, dynamic> data) async {
+    // TODO: Add validation logic
+    // Example: Validate required fields, check permissions, etc.
+    return true;
+  }
+
+  /// Update {{class_name}}
+  /// 
+  /// Business logic: Validate data before updating
+  Future<bool> update{{ClassName}}(String id, Map<String, dynamic> data) async {
+    // TODO: Add validation logic
+    return true;
+  }
+
+  /// Delete {{class_name}}
+  /// 
+  /// Business logic: Check dependencies before deleting
+  Future<bool> delete{{ClassName}}(String id) async {
+    // TODO: Add validation logic
+    // Example: Check if {{class_name}} is used elsewhere, check permissions, etc.
+    return true;
+  }
+}
+

@@ -1,0 +1,234 @@
+{
+  "version": "2.0.0",
+  "inputs": [
+    {
+      "id": "commitMessage",
+      "type": "promptString",
+      "description": "Nhập commit message",
+      "default": "chore: update"
+    }
+  ],
+  "tasks": [
+    {
+      "label": "Build APK",
+      "type": "shell",
+      "detail": "Build release APK and upload to Google Drive",
+      "windows": {
+        "command": "${workspaceFolder}\\scripts\\build_apk.bat"
+      },
+      "linux": {
+        "command": "bash",
+        "args": ["${workspaceFolder}/scripts/build_apk.sh"]
+      },
+      "osx": {
+        "command": "bash",
+        "args": ["${workspaceFolder}/scripts/build_apk.sh"]
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": false,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Generate Assets",
+      "type": "shell",
+      "command": "dart run tools/generate_assets/generate_assets.dart",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": false,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Pub Get + Generate Assets",
+      "type": "shell",
+      "windows": {
+        "command": "${workspaceFolder}\\scripts\\pub_get_with_assets.bat"
+      },
+      "linux": {
+        "command": "bash",
+        "args": ["${workspaceFolder}/scripts/pub_get_with_assets.sh"]
+      },
+      "osx": {
+        "command": "bash",
+        "args": ["${workspaceFolder}/scripts/pub_get_with_assets.sh"]
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Git Push",
+      "type": "shell",
+      "command": "git push",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": false,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Git Push Publish Branch",
+      "type": "shell",
+      "command": "git push -u origin HEAD",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": false,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Generate Commit Message",
+      "type": "shell",
+      "command": "dart run scripts/generate_commit_message.dart",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": true,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Git Commit",
+      "type": "shell",
+      "windows": {
+        "command": "${workspaceFolder}\\scripts\\git_commit.bat",
+        "args": ["${input:commitMessage}"]
+      },
+      "linux": {
+        "command": "bash",
+        "args": ["${workspaceFolder}/scripts/git_commit.sh", "${input:commitMessage}"]
+      },
+      "osx": {
+        "command": "bash",
+        "args": ["${workspaceFolder}/scripts/git_commit.sh", "${input:commitMessage}"]
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": false,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Git Commit & Push",
+      "type": "shell",
+      "windows": {
+        "command": "${workspaceFolder}\\scripts\\git_commit_push.bat",
+        "args": ["${input:commitMessage}"]
+      },
+      "linux": {
+        "command": "bash",
+        "args": ["${workspaceFolder}/scripts/git_commit_push.sh", "${input:commitMessage}"]
+      },
+      "osx": {
+        "command": "bash",
+        "args": ["${workspaceFolder}/scripts/git_commit_push.sh", "${input:commitMessage}"]
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": false,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Git Commit (Auto)",
+      "type": "shell",
+      "windows": {
+        "command": "${workspaceFolder}\\scripts\\git_commit_auto.bat"
+      },
+      "linux": {
+        "command": "bash",
+        "args": ["${workspaceFolder}/scripts/git_commit_auto.sh"]
+      },
+      "osx": {
+        "command": "bash",
+        "args": ["${workspaceFolder}/scripts/git_commit_auto.sh"]
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": false,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Git Commit & Push (Auto)",
+      "type": "shell",
+      "windows": {
+        "command": "${workspaceFolder}\\scripts\\git_commit_push_auto.bat"
+      },
+      "linux": {
+        "command": "bash",
+        "args": ["${workspaceFolder}/scripts/git_commit_push_auto.sh"]
+      },
+      "osx": {
+        "command": "bash",
+        "args": ["${workspaceFolder}/scripts/git_commit_push_auto.sh"]
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": false,
+        "clear": false
+      },
+      "problemMatcher": []
+    }
+  ]
+}

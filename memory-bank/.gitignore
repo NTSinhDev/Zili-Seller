@@ -1,0 +1,7 @@
+# Ignore sensitive context files nếu có
+# *.secret.md
+# *.private.md
+
+# Giữ lại các file context chung
+# Không ignore gì cả để có thể commit context vào git
+

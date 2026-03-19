@@ -1,0 +1,70 @@
+// Model Template - Copy và customize cho feature mới
+// Model được customize để match với API response structure
+//
+// Hướng dẫn sử dụng:
+// 1. Copy file này và đổi tên thành [model].dart
+// 2. Thay thế {{ClassName}} bằng tên Model class của bạn
+// 3. Thêm/sửa các fields để match với API response structure
+// 4. Cập nhật fromMap() để parse đúng các fields từ API
+//
+// LƯU Ý: File này chứa template variables ({{ClassName}}, {{class_name}}, etc.)
+// Các lỗi linter là bình thường và sẽ biến mất sau khi replace placeholders
+
+import 'dart:convert';
+
+/// Model cho {{ClassName}} - Match với API response structure
+class {{ClassName}} {
+  // TODO: Thêm các fields match với API response
+  final String id;
+  final String? name;
+  // ... other fields
+
+  {{ClassName}}({
+    required this.id,
+    this.name,
+    // ... other parameters
+  });
+
+  /// Parse từ API response (JSON)
+  factory {{ClassName}}.fromMap(Map<String, dynamic> map) {
+    return {{ClassName}}(
+      id: map['id']?.toString() ?? '',
+      name: map['name']?.toString(),
+      // TODO: Map các fields khác từ API response
+      // Handle null values và type conversions safely
+    );
+  }
+
+  /// Parse từ JSON string
+  factory {{ClassName}}.fromJson(String source) => 
+      {{ClassName}}.fromMap(json.decode(source));
+
+  /// Helper methods cho UI
+  String get displayName => name ?? id;
+  
+  /// Convert to Map
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      // ... other fields
+    };
+  }
+
+  /// Convert to JSON string
+  String toJson() => json.encode(toMap());
+
+  /// Copy with method để tạo instance mới với một số fields thay đổi
+  {{ClassName}} copyWith({
+    String? id,
+    String? name,
+    // ... other fields
+  }) {
+    return {{ClassName}}(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      // ... other fields
+    );
+  }
+}
+

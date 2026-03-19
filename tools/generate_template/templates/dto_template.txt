@@ -1,0 +1,77 @@
+// DTO Template - Copy và customize cho feature mới
+// DTO (Data Transfer Object) dùng để transfer data giữa các layers
+//
+// Hướng dẫn sử dụng:
+// 1. Copy file này và đổi tên thành [feature]_[action]_input.dart hoặc [feature]_[action]_dto.dart
+// 2. Thay thế {{ClassName}} bằng tên DTO class của bạn
+// 3. Thêm/sửa các fields để match với API request/response structure
+// 4. Cập nhật toMap() để convert đúng format cho API
+//
+// LƯU Ý: File này chứa template variables ({{ClassName}}, {{class_name}}, etc.)
+// Các lỗi linter là bình thường và sẽ biến mất sau khi replace placeholders
+
+import 'dart:convert';
+
+/// {{ClassName}} - DTO cho {{Description}}
+class {{ClassName}} {
+  // TODO: Thêm các fields match với API structure
+  final String? field1;
+  final int? field2;
+  final bool? field3;
+  // ... other fields
+
+  {{ClassName}}({
+    this.field1,
+    this.field2,
+    this.field3,
+    // ... other parameters
+  });
+
+  /// Convert sang Map để gửi lên API
+  Map<String, dynamic> toMap() {
+    return {
+      if (field1 != null) 'field1': field1,
+      if (field2 != null) 'field2': field2,
+      if (field3 != null) 'field3': field3,
+      // ... other fields
+    };
+  }
+
+  /// Convert sang JSON string
+  String toJson() => json.encode(toMap());
+
+  /// Parse từ Map (từ API response)
+  factory {{ClassName}}.fromMap(Map<String, dynamic> map) {
+    return {{ClassName}}(
+      field1: map['field1']?.toString(),
+      field2: map['field2'] is num ? (map['field2'] as num).toInt() : null,
+      field3: map['field3'] as bool?,
+      // ... other fields
+    );
+  }
+
+  /// Parse từ JSON string
+  factory {{ClassName}}.fromJson(String source) => 
+      {{ClassName}}.fromMap(json.decode(source));
+
+  /// Copy with method
+  {{ClassName}} copyWith({
+    String? field1,
+    int? field2,
+    bool? field3,
+    // ... other fields
+  }) {
+    return {{ClassName}}(
+      field1: field1 ?? this.field1,
+      field2: field2 ?? this.field2,
+      field3: field3 ?? this.field3,
+      // ... other fields
+    );
+  }
+
+  @override
+  String toString() {
+    return '{{ClassName}}(field1: $field1, field2: $field2, field3: $field3)';
+  }
+}
+

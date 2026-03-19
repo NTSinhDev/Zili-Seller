@@ -1,0 +1,82 @@
+/* ======================================================
+   VSCode Markdown Preview – Dark Mode Fix
+   ====================================================== */
+
+html,
+body,
+.vscode-body {
+  background-color: #242424 !important;
+  color: #ffffff;
+  line-height: 1.6 !important;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  border-bottom: 1px solid #333 !important;
+  padding-bottom: 4px !important;
+}
+
+/* Paragraph */
+p {
+  color: #d4d4d4 !important;
+}
+
+/* Links */
+a {
+  color: #4fc1ff !important;
+}
+
+/* Inline code */
+code {
+  background-color: #2d2d2d !important;
+  color: #9cdcfe !important;
+  padding: 2px 4px !important;
+  border-radius: 4px !important;
+  font-family: Consolas, monospace !important;
+}
+
+/* Code blocks */
+pre {
+  background-color: #2d2d2d !important;
+  color: #d4d4d4 !important;
+  padding: 12px !important;
+  border-radius: 8px !important;
+  overflow-x: auto !important;
+}
+
+pre code {
+  background: transparent !important;
+  color: #333333 !important;
+}
+
+/* Blockquote */
+blockquote {
+  border-left: 4px solid #333333 !important;
+  background: #252526 !important;
+  padding: 8px 12px !important;
+  color: #cccccc !important;
+}
+
+/* Tables */
+table {
+  border-collapse: collapse !important;
+}
+
+th, td {
+  border: 1px solid #333 !important;
+  padding: 6px 10px !important;
+}
+
+th {
+  background-color: #2d2d2d !important;
+  color: #ffffff !important;
+}
+
+/* Horizontal rule */
+hr {
+  border: none !important;
+  border-top: 1px solid #333 !important;
+  margin: 24px 0 !important;
+}

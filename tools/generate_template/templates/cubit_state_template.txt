@@ -1,0 +1,47 @@
+// Cubit State Template - Copy và customize cho feature mới
+// LƯU Ý: File này chứa template variables ({{ClassName}}, {{class_name}}, etc.)
+// Các lỗi linter là bình thường và sẽ biến mất sau khi replace placeholders
+
+// ignore_for_file: public_member_api_docs, sort_constructors_first
+part of '{{class_name}}_cubit.dart';
+
+abstract class {{ClassName}}State extends Equatable {
+  const {{ClassName}}State({this.event = ""});
+  final String event;
+
+  @override
+  List<Object> get props => [];
+}
+
+class {{ClassName}}Initial extends {{ClassName}}State {}
+
+class Loading{{ClassName}}State extends {{ClassName}}State {
+  const Loading{{ClassName}}State({super.event = ""});
+}
+
+class Loaded{{ClassName}}State extends {{ClassName}}State {}
+
+class {{ClassName}}LoadedState extends {{ClassName}}State {
+  final {{ClassName}} {{class_name}};
+  const {{ClassName}}LoadedState({required this.{{class_name}}});
+
+  @override
+  List<Object> get props => [{{class_name}}];
+}
+
+class Message{{ClassName}}State extends {{ClassName}}State {
+  final String message;
+  const Message{{ClassName}}State({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class Failed{{ClassName}}State extends {{ClassName}}State {
+  final ResponseFailedState error;
+  const Failed{{ClassName}}State({required this.error});
+
+  @override
+  List<Object> get props => [error];
+}
+

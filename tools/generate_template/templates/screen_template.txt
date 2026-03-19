@@ -1,0 +1,88 @@
+// Screen Template - Copy và customize cho feature mới
+// LƯU Ý: File này chứa template variables ({{ClassName}}, {{class_name}}, etc.)
+// Các lỗi linter là bình thường và sẽ biến mất sau khi replace placeholders
+
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import '../../bloc/{{class_name}}/{{class_name}}_cubit.dart';
+import '../../data/repositories/{{class_name}}_repository.dart';
+import '../../di/dependency_injection.dart';
+import '../../res/res.dart';
+import '../../utils/extension/extension.dart';
+import '../../utils/widgets/widgets.dart';
+
+class {{ClassName}}Screen extends StatefulWidget {
+  const {{ClassName}}Screen({super.key});
+  static String keyName = '/{{class_name}}';
+
+  @override
+  State<{{ClassName}}Screen> createState() => _{{ClassName}}ScreenState();
+}
+
+class _{{ClassName}}ScreenState extends State<{{ClassName}}Screen> {
+  late final {{ClassName}}Cubit _{{class_name}}Cubit;
+  late final {{ClassName}}Repository _{{class_name}}Repo;
+
+  @override
+  void initState() {
+    super.initState();
+    _{{class_name}}Cubit = di<{{ClassName}}Cubit>();
+    _{{class_name}}Repo = di<{{ClassName}}Repository>();
+    _{{class_name}}Cubit.get{{ClassName}}s();
+  }
+
+  @override
+  void dispose() {
+    _{{class_name}}Cubit.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('{{DisplayName}}'),
+      ),
+      body: BlocConsumer<{{ClassName}}Cubit, {{ClassName}}State>(
+        bloc: _{{class_name}}Cubit,
+        listener: (context, state) {
+          if (state is Failed{{ClassName}}State) {
+            // TODO: Show error message
+          } else if (state is Message{{ClassName}}State) {
+            // TODO: Show success message
+          }
+        },
+        builder: (context, state) {
+          if (state is Loading{{ClassName}}State) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          return StreamBuilder<List<{{ClassName}}>>(
+            stream: _{{class_name}}Repo.{{class_name}}s.stream,
+            builder: (context, snapshot) {
+              final items = snapshot.data ?? [];
+              
+              if (items.isEmpty) {
+                return const Center(child: Text('Không có dữ liệu'));
+              }
+
+              return ListView.builder(
+                itemCount: items.length,
+                itemBuilder: (context, index) {
+                  final item = items[index];
+                  return ListTile(
+                    title: Text(item.displayName),
+                    // TODO: Customize list item
+                  );
+                },
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+

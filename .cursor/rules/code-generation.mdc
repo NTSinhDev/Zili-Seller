@@ -1,0 +1,343 @@
+---
+description: Code generation shortcuts for rapid development
+globs: 
+alwaysApply: true
+---
+# Code Generation Commands
+
+**LƯU Ý**: Bỏ qua pattern `generate_template` (đang build sai). Sử dụng Dart scripts trong `tools/` thay thế.
+
+Khi người dùng sử dụng các shortcuts bắt đầu bằng `#generate-` hoặc `gen`, tự động generate code từ templates có sẵn.
+
+## Shortcuts hỗ trợ:
+
+### 1. Generate Model
+- **Format**: `#generate-model <Name> [domain]`
+- **Ví dụ**: `#generate-model Product` hoặc `#generate-model Product product`
+- **Tạo**: `lib/data/models/{domain}/{name}.dart`
+- **Template**: `tools/generate_template/templates/model_template.txt`
+
+### 2. Generate Middleware
+- **Format**: `#generate-middleware <Name> [domain]`
+- **Ví dụ**: `#generate-middleware Customer` hoặc `#generate-middleware Customer user`
+- **Tạo**: `lib/data/middlewares/{name}_middleware.dart`
+- **Template**: `tools/generate_template/templates/middleware_template.txt`
+- **DI**: Tự động register `registerFactory<{Name}Middleware>({Name}Middleware.new)`
+
+### 3. Generate Repository
+- **Format**: `#generate-repository <Name> [domain]`
+- **Ví dụ**: `#generate-repository Customer` hoặc `#generate-repository Customer user`
+- **Tạo**: `lib/data/repositories/{name}_repository.dart`
+- **Template**: `tools/generate_template/templates/repository_template.txt`
+- **DI**: Tự động register `registerLazySingleton<{Name}Repository>({Name}Repository.new)`
+
+### 4. Generate Service
+- **Format**: `#generate-service <Name> [domain]`
+- **Ví dụ**: `#generate-service Order` hoặc `#generate-service Order order`
+- **Tạo**: `lib/services/{name}_service.dart`
+- **Template**: `tools/generate_template/templates/service_template.txt`
+- **DI**: Tự động register `registerLazySingleton<{Name}Service>({Name}Service.new)`
+
+### 5. Generate Cubit
+- **Format**: `#generate-cubit <Name> [domain]`
+- **Ví dụ**: `#generate-cubit Customer` hoặc `#generate-cubit Customer user`
+- **Tạo**: 
+  - `lib/bloc/{name}/{name}_cubit.dart`
+  - `lib/bloc/{name}/{name}_state.dart`
+- **Templates**: 
+  - `tools/generate_template/templates/cubit_template.txt`
+  - `tools/generate_template/templates/cubit_state_template.txt`
+- **DI**: Tự động register `registerFactory<{Name}Cubit>({Name}Cubit.new)`
+
+### 6. Generate Screen
+- **Format**: `#generate-screen <Name> [domain]`
+- **Ví dụ**: `#generate-screen ProductList` hoặc `#generate-screen ProductList product`
+- **Tạo**: `lib/views/{name}/{name}_screen.dart`
+- **Template**: `tools/generate_template/templates/screen_template.txt`
+
+### 6.1. Generate List Screen (NEW)
+- **Format**: `#generate-list-screen <Name> [domain] [type]` hoặc `gen list-screen <Name> [domain] [type]`
+- **Types**: 
+  - `simple` (default) - Simple list không có tabs, không có filter
+  - `tabs` - List với tabs
+  - `filter` - List với filter
+- **Ví dụ**: 
+  - `#generate-list-screen Product` (simple)
+  - `#generate-list-screen Customer user tabs` (với tabs)
+  - `#generate-list-screen Order order filter` (với filter)
+  - `gen list-screen Product`
+  - `gen list-screen Customer user tabs`
+- **Tool**: Chạy Dart script `tools/generate_list_screen/generate_list_screen.dart`
+- **Commands**: 
+  - Simple: `dart run tools/generate_list_screen/generate_list_screen.dart <Name> [domain]`
+  - Tabs: `dart run tools/generate_list_screen/generate_list_screen.dart <Name> [domain] tabs`
+  - Filter: `dart run tools/generate_list_screen/generate_list_screen.dart <Name> [domain] filter`
+- **Tạo**: `lib/views/{domain}/{name}_list_screen.dart`
+- **Templates**: 
+  - Simple: `tools/generate_template/templates/list_screen_template.txt`
+  - Tabs: `tools/generate_template/templates/list_screen_template_with_tabs.txt`
+  - Filter: `tools/generate_template/templates/list_screen_template_with_filter.txt`
+- **Pattern**: Sử dụng `ListScreenTemplate` với search, refresh, load more
+- **Reference**: `documents/list_screen/list-screen-ui-pattern.md`
+- **Implementation**: Sử dụng Dart script (giống `generate_assets.dart`), KHÔNG dùng pattern `generate_template`
+
+### 7. Generate Widget
+- **Format**: `#generate-widget <Name>`
+- **Ví dụ**: `#generate-widget ProductCard`
+- **Tạo**: `lib/utils/widgets/{name}_widget.dart` hoặc `lib/views/{domain}/components/{name}_widget.dart`
+- **Template**: `tools/generate_template/templates/widget_template.txt`
+
+### 8. Generate Full Feature
+- **Format**: `#generate-feature <Name> [domain]`
+- **Ví dụ**: `#generate-feature Order` hoặc `#generate-feature Order order`
+- **Tạo**: Tất cả files (Model, Middleware, Repository, Service, Cubit, State)
+- **DI**: Tự động register tất cả vào DI
+
+### 9. Generate from cURL Request (NEW)
+- **Format**: `#generate-from-curl <curl_command>` hoặc paste curl trực tiếp
+- **Ví dụ**: 
+  ```
+  #generate-from-curl "curl -X POST https://api.example.com/customers -H 'Content-Type: application/json' -d '{\"name\":\"John\"}'"
+  ```
+  Hoặc paste curl trực tiếp:
+  ```
+  curl -X GET https://api.example.com/products?limit=10
+  ```
+- **Quy trình tự động**:
+  1. **Parse cURL**: Extract method, URL, headers, body, query params
+  2. **Generate code cơ bản**: Tạo Model, Middleware, Repository, Cubit với structure cơ bản
+  3. **Tạo script test**: Tạo file `test/api/{domain}/test_{feature}_api.dart` để gửi request thực tế
+  4. **Gửi request test**: Tự động chạy script test để lấy response thực tế từ API
+  5. **Extract response structure**: Phân tích response để xác định cấu trúc dữ liệu thực tế
+  6. **Cập nhật Model**: Cập nhật Model với các fields thực tế từ response
+  7. **Cập nhật Middleware**: Điều chỉnh parsing logic dựa trên response structure thực tế
+  8. **Hoàn thiện**: Đảm bảo tất cả code match với API response thực tế
+- **Tự động tạo**:
+  - **DTO/Input**: Từ request body (nếu có POST/PUT)
+  - **Model**: Từ response structure thực tế (sau khi test API)
+  - **Middleware method**: Từ endpoint và method, với parsing logic đúng
+  - **Cubit method**: Tương ứng với middleware method
+  - **Repository stream**: BehaviorSubject để lưu data (nếu GET)
+  - **DI Registration**: Tự động register nếu cần
+  - **Test script**: Script Dart để test API và extract data
+
+## Quy tắc xử lý:
+
+1. **Parse tên**:
+   - PascalCase → ClassName (ví dụ: `Product` → `Product`)
+   - snake_case → file_name (ví dụ: `Product` → `product`)
+   - camelCase → variableName (ví dụ: `Product` → `product`)
+
+2. **Domain mặc định**:
+   - Nếu không có domain, sử dụng tên class ở dạng snake_case
+   - Ví dụ: `#generate-model Product` → domain = `product`
+
+3. **Template Variables**:
+   - `{{ClassName}}` → PascalCase (ví dụ: `Product`)
+   - `{{class_name}}` → snake_case (ví dụ: `product`)
+   - `{{className}}` → camelCase (ví dụ: `product`)
+   - `{{domain}}` → domain name (ví dụ: `product`, `user`)
+   - `{{DisplayName}}` → Display name (ví dụ: `Product List`)
+
+4. **Tự động Register DI**:
+   - Middleware → `registerFactory`
+   - Repository → `registerLazySingleton`
+   - Service → `registerLazySingleton`
+   - Cubit → `registerFactory`
+   - Đọc file `lib/di/dependency_injection.dart`
+   - Thêm registration vào đúng section (Middleware, Repository, Service, Cubit)
+   - Format: `..registerFactory<{ClassName}Middleware>({ClassName}Middleware.new)`
+
+5. **Tạo file**:
+   - **LƯU Ý**: Bỏ qua pattern `generate_template` (đang build sai)
+   - **List Screen**: Sử dụng Dart script `tools/generate_list_screen/generate_list_screen.dart`
+   - **Các components khác**: Load template từ `tools/generate_template/templates/` (file .txt)
+   - Replace tất cả placeholders ({{ClassName}}, {{class_name}}, etc.)
+   - Tạo file .dart ở đúng vị trí
+   - Tạo thư mục nếu chưa có
+
+6. **Import statements**:
+   - Tự động điều chỉnh import paths dựa trên vị trí file
+   - Sử dụng relative imports khi có thể
+
+7. **Parse cURL Request**:
+   - Nhận diện curl command (bắt đầu bằng `curl` hoặc `#generate-from-curl`)
+   - Extract thông tin:
+     - **Method**: GET, POST, PUT, DELETE (từ `-X` hoặc infer từ URL)
+     - **URL**: Extract endpoint path (bỏ domain, chỉ lấy path)
+     - **Headers**: Extract từ `-H` flags
+     - **Body**: Extract từ `-d` hoặc `--data` (JSON string)
+     - **Query params**: Extract từ URL query string
+   - Parse JSON body để tạo DTO structure
+   - Infer response structure từ endpoint pattern hoặc hỏi user
+
+8. **Generate từ cURL**:
+   - **Tên feature**: Infer từ endpoint (ví dụ: `/customers` → `Customer`)
+   - **DTO name**: Từ method + endpoint (ví dụ: POST `/customers` → `CreateCustomerInput`)
+   - **Method name**: Từ endpoint và method (ví dụ: GET `/customers` → `getCustomers`)
+   - **Repository stream**: Từ feature name (ví dụ: `customers` BehaviorSubject)
+   - **File paths**: 
+     - DTO: `lib/data/dto/{domain}/{action}_{feature}_input.dart`
+     - Model: `lib/data/models/{domain}/{feature}.dart` (nếu có response)
+     - Middleware: Thêm method vào existing middleware hoặc tạo mới
+     - Cubit: Thêm method vào existing cubit hoặc tạo mới
+     - Repository: Thêm stream vào existing repository hoặc tạo mới
+
+## Ví dụ sử dụng:
+
+```
+#generate-model Product
+→ Tạo lib/data/models/product/product.dart
+
+#generate-cubit Customer user
+→ Tạo lib/bloc/customer/customer_cubit.dart
+→ Tạo lib/bloc/customer/customer_state.dart
+→ Register vào DI: registerFactory<CustomerCubit>(CustomerCubit.new)
+
+#generate-feature Order order
+→ Tạo toàn bộ feature Order:
+  - lib/data/models/order/order.dart
+  - lib/data/middlewares/order_middleware.dart
+  - lib/data/repositories/order_repository.dart
+  - lib/services/order_service.dart
+  - lib/bloc/order/order_cubit.dart
+  - lib/bloc/order/order_state.dart
+→ Register tất cả vào DI
+```
+
+## Parse cURL Logic:
+
+Khi nhận diện curl command, agent sẽ thực hiện các bước sau:
+
+### Bước 1: Parse cURL
+   ```bash
+   # Ví dụ input:
+   curl -X POST https://api.example.com/company/customer \
+     -H 'Content-Type: application/json' \
+     -d '{"name":"John","email":"john@example.com","phone":"0123456789"}'
+   
+   # Extract:
+   - Method: POST
+   - URL: https://api.example.com/company/customer
+   - Endpoint: /company/customer
+   - Headers: Content-Type, Authorization (nếu có)
+   - Body: {"name":"John","email":"john@example.com","phone":"0123456789"}
+   - Query params: Từ URL (nếu có)
+   ```
+
+### Bước 2: Infer Feature Name
+   - Từ endpoint: `/company/customer` → `Customer`
+   - Từ endpoint: `/products` → `Product`
+   - Từ endpoint: `/orders` → `Order`
+   - Từ endpoint: `/seller/role` → `Role` (domain: `seller`)
+
+### Bước 3: Generate Code Cơ Bản
+   - **Model**: Tạo với structure cơ bản (id, name, etc.)
+   - **Middleware**: Tạo method với parsing logic cơ bản
+   - **Repository**: Tạo với BehaviorSubject stream
+   - **Cubit**: Tạo với method tương ứng
+   - **NetworkUrl**: Thêm endpoint vào class tương ứng
+   - **DI Registration**: Register tất cả vào DI
+
+### Bước 4: Tạo Script Test và Gửi Request
+   - **Tạo script test**: `test/api/{domain}/test_{feature}_api.dart`
+   - **Script sẽ**:
+     - Extract token từ cURL headers (nếu có)
+     - Gửi request thực tế đến API
+     - Log response structure chi tiết
+     - Phân tích các fields và types trong response
+   - **Chạy script**: Tự động chạy `dart test/api/{domain}/test_{feature}_api.dart`
+   - **Lưu response**: Log toàn bộ response để phân tích
+
+### Bước 5: Extract Response Structure
+   - Phân tích response JSON:
+     - Xác định key chứa list data (ví dụ: `listData`, `items`, `data`, `roles`)
+     - Phân tích structure của item đầu tiên trong list
+     - Xác định types của từng field (int, String, bool, List, Map, null)
+     - Phát hiện nested objects (ví dụ: `sellerPermissions` là List<SellerPermission>)
+   - Tạo danh sách fields với types chính xác
+
+### Bước 6: Cập nhật Model với Data Thực Tế
+   - **Cập nhật Model**: Thay thế structure cơ bản bằng structure thực tế
+     - Thêm tất cả fields từ response
+     - Đặt đúng types (int thay vì String nếu cần)
+     - Xử lý nullable fields
+     - Tạo nested models nếu cần (ví dụ: `SellerPermission`)
+   - **Cập nhật fromMap()**: Parse đúng tất cả fields
+   - **Cập nhật toMap()**: Convert đúng tất cả fields
+
+### Bước 7: Cập nhật Middleware Parsing Logic
+   - **Xác định key chứa data**: Từ response thực tế (ví dụ: `listData`)
+   - **Cập nhật parsing**: Parse đúng key và structure
+   - **Xử lý nested objects**: Parse nested models đúng cách
+   - **Error handling**: Đảm bảo xử lý các trường hợp edge cases
+
+### Bước 8: Generate DTO (nếu có POST/PUT)
+   - POST/PUT → Tạo Input DTO: `CreateCustomerInput` hoặc `UpdateCustomerInput`
+   - Fields từ JSON body: `name`, `email`, `phone`
+   - Types: Infer từ JSON values (String, int, double, bool, List, Map)
+
+### Bước 9: Hoàn thiện
+   - **Kiểm tra linter**: Đảm bảo không có lỗi
+   - **Verify imports**: Đảm bảo tất cả imports đúng
+   - **Test**: Code sẵn sàng để sử dụng với API thực tế
+
+### Ví dụ Quy trình Hoàn Chỉnh:
+
+```
+Input: curl GET https://stg-gw.wowi.cafe/auth/api/v1/seller/role?offset=0&limit=8
+
+1. Parse → Method: GET, Endpoint: /seller/role, Domain: seller
+2. Generate cơ bản → Role model, RoleMiddleware, RoleRepository, RoleCubit
+3. Tạo test script → test/api/seller/test_role_api.dart
+4. Chạy test → Gửi request, nhận response
+5. Extract → Response có key "listData", Role có fields: id(int), name(String), key(String), sellerPermissions(List)
+6. Cập nhật Model → Role với đầy đủ fields thực tế, tạo SellerPermission model
+7. Cập nhật Middleware → Parse từ "listData" key
+8. Hoàn thiện → Code match 100% với API response
+```
+
+## Lưu ý:
+
+- **IGNORE pattern `generate_template`**: Pattern này đang build sai, KHÔNG sử dụng
+- **List Screen**: Sử dụng Dart script `tools/generate_list_screen/generate_list_screen.dart` thay vì pattern
+- Luôn tạo file với format snake_case
+- Tự động tạo thư mục nếu chưa có
+- Kiểm tra file đã tồn tại trước khi tạo (hỏi user nếu cần overwrite)
+- Sau khi tạo, hiển thị thông báo thành công với đường dẫn file
+- Nếu có lỗi, hiển thị thông báo lỗi rõ ràng
+
+## Xử lý List Screen Generation:
+
+Khi user gõ `#generate-list-screen <Name> [domain] [type]` hoặc `gen list-screen <Name> [domain] [type]`:
+
+1. **KHÔNG** sử dụng pattern `generate_template`
+2. **SỬ DỤNG** Dart script: `tools/generate_list_screen/generate_list_screen.dart`
+3. **Xác định type**: 
+   - Nếu không có type → `simple` (default)
+   - Types: `simple`, `tabs`, `filter`
+4. **Chạy command**: `dart run tools/generate_list_screen/generate_list_screen.dart <Name> [domain] [type]`
+5. Script sẽ tự động:
+   - Parse tên (PascalCase, snake_case, camelCase)
+   - Chọn template dựa trên type:
+     - `simple` → `list_screen_template.txt`
+     - `tabs` → `list_screen_template_with_tabs.txt`
+     - `filter` → `list_screen_template_with_filter.txt`
+   - Replace placeholders
+   - Tạo file tại `lib/views/{domain}/{name}_list_screen.dart`
+   - Tạo thư mục nếu chưa có
+   - Hỏi trước khi ghi đè nếu file đã tồn tại
+- **Khi generate từ cURL**: 
+  - **BẮT BUỘC** tạo script test và gửi request thực tế
+  - **BẮT BUỘC** extract response structure và cập nhật model
+  - Không được để model với structure cơ bản, phải match với API thực tế
+  - Script test có thể giữ lại để test sau này hoặc xóa (tùy user)
+- **Token handling**: 
+  - Extract token từ cURL headers (Authorization Bearer)
+  - Sử dụng token trong script test
+  - Nếu không có token trong cURL, script test sẽ fail (cần user cung cấp)
+- **Response analysis**:
+  - Tự động phát hiện key chứa list data (listData, items, data, roles, etc.)
+  - Tự động phát hiện nested objects và tạo models tương ứng
+  - Xử lý nullable fields đúng cách
+  - Convert types đúng (int vs String, bool vs String, etc.)

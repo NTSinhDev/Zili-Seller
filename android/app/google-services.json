@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "180826362406",
+    "project_id": "zili-ecom",
+    "storage_bucket": "zili-ecom.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:180826362406:android:be17bf1385bf187957cce7",
+        "android_client_info": {
+          "package_name": "com.zili_coffee.seller"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDPzOHIUnyWJIXJqPEnyXWiVTFOHCa_Q3o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

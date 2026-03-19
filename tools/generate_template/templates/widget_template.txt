@@ -1,0 +1,35 @@
+// Widget Template - Copy và customize cho feature mới
+// LƯU Ý: File này chứa template variables ({{ClassName}}, {{class_name}}, etc.)
+// Các lỗi linter là bình thường và sẽ biến mất sau khi replace placeholders
+
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import '../../res/res.dart';
+
+/// {{ClassName}}Widget - Reusable widget component
+/// 
+/// Description: {{Description}}
+class {{ClassName}}Widget extends StatelessWidget {
+  // TODO: Add required parameters
+  final String? title;
+  final VoidCallback? onTap;
+
+  const {{ClassName}}Widget({
+    super.key,
+    this.title,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      // TODO: Customize widget UI
+      child: Text(
+        title ?? '{{ClassName}}',
+        style: AppStyles.text.medium(),
+      ),
+    );
+  }
+}
+

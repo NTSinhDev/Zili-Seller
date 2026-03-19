@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Cho phép truy cập app internal storage -->
+    <files-path
+        name="internal_files"
+        path="." />
+
+    <!-- Cho phép external storage nếu cần -->
+    <external-path
+        name="external_files"
+        path="." />
+
+</paths>

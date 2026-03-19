@@ -1,0 +1,811 @@
+# Memory Bank - SelectProductsScreen & Order Module Context
+
+## 📋 Tổng quan
+
+Tài liệu này chứa toàn bộ context chi tiết về SelectProductsScreen và Order Module trong Flutter Ecommerce App.
+
+---
+
+## 🏗️ 1. Kiến trúc tổng quan
+
+### 1.1. Luồng dữ liệu chính
+
+```
+EntryOrderScreen
+  ↓ (tap "Tạo đơn hàng")
+LoadingScreen (nếu cần load warehouses)
+  ↓ (success)
+CreateOrderScreen
+  ↓ (tap Products Section)
+SelectProductsScreen
+  ↓ (chọn sản phẩm)
+CreateOrderScreen (update selectedProducts)
+```
+
+### 1.2. Dependency Injection
+
+- `OrderMiddleware`: `di<OrderMiddleware>()`
+- `OrderRepository`: `di<OrderRepository>()`
+- `OrderCubit`: `di<OrderCubit>()`
+
+---
+
+## 📱 2. SelectProductsScreen
+
+### 2.1. File Location
+`lib/views/order/create_order/select_products_screen.dart`
+
+### 2.2. Widget Structure
+
+```dart
+class SelectProductsScreen extends StatefulWidget {
+  final List<Map<String, dynamic>>? initialProducts;
+  final String? branchId;
+  static String keyName = '/select-products';
+}
+```
+
+### 2.3. State Variables
+
+```dart
+class _SelectProductsScreenState extends State<SelectProductsScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  final OrderMiddleware _orderMiddleware = di<OrderMiddleware>();
+  
+  List<Map<String, dynamic>> _selectedProducts = [];
+  List<OrderProduct> _allProducts = [];
+  bool _isLoading = false;
+  bool _hasMore = true;
+  int _currentOffset = 0;
+  final int _limit = 20;
+  String? _currentKeyword;
+}
+```
+
+### 2.4. Key Methods
+
+#### `_loadProducts({bool loadMore = false})`
+- Gọi API: `_orderMiddleware.getProductsForOrder()`
+- Params: `limit: 20`, `offset: _currentOffset`, `keyword: _currentKeyword`, `branchId: widget.branchId`
+- Pagination: `_currentOffset += products.length`, `_hasMore = _currentOffset < count`
+- **BUG FIXED**: Line 115 đã có `_allProducts.addAll(products)` khi `loadMore = true`
+
+#### `_onSearchChanged()`
+- Debounce: 500ms với `EasyDebounce`
+- Reset: `_currentOffset = 0`, `_allProducts.clear()`, `_hasMore = true`
+
+#### `_addProduct(OrderProduct product, ProductVariant? variant)`
+- Format selected product:
+```dart
+{
+  'productId': product.id,
+  'variantId': variant?.id ?? '',
+  'name': productName,
+  'unit': unit,
+  'price': '$price', // Lưu dạng String
+  'image': image,
+  'available': available,
+  'sku': sku,
+  'barcode': barcode,
+  'quantity': 1,
+  'product': product.toMap(),
+  'variant': variant?.toMap(),
+}
+```
+
+#### `_showVariantSelector(OrderProduct product)`
+- Bottom sheet để chọn variant
+- Hiển thị: variant name, price, inventory, SKU
+- Disable nếu `available <= 0`
+
+### 2.5. UI Components
+
+#### Header
+- AppBar với button "Hoàn tất" trong actions
+- Badge "Đã chọn X sản phẩm" nếu có sản phẩm đã chọn
+
+#### Search Bar
+- Component: `_ProductSearchBar`
+- Features: Search input + QR scanner icon
+- Debounce: 500ms
+
+#### Product List
+- Component: `_ProductListItem`
+- Features:
+  - Image, Name, ShortName, SKU
+  - Price (format: "Nhiều mức giá" nếu có variants)
+  - Inventory info
+  - Selected state với background màu primary
+  - Tap behavior:
+    - Selected → Remove
+    - Has variants → Show selector
+    - No variants → Add directly
+
+#### Loading State
+- Animation: `LoadingAnimationWidget.flickr`
+- Colors: `Color(0xFF005C9D)`, `Color(0xFFE54925)`
+
+### 2.6. Output Format
+
+Khi `Navigator.pop()`:
+```dart
+List<Map<String, dynamic>> _selectedProducts
+```
+
+Mỗi item format:
+```dart
+{
+  'productId': String,
+  'variantId': String?,
+  'name': String,
+  'unit': String,
+  'price': String, // Lưu dạng string, cần convert khi tính toán
+  'image': String,
+  'available': num,
+  'sku': String,
+  'barcode': String,
+  'quantity': int,
+  'product': Map<String, dynamic>, // Full OrderProduct.toMap()
+  'variant': Map<String, dynamic>?, // Full ProductVariant.toMap() nếu có
+}
+```
+
+---
+
+## 📦 3. Data Models
+
+### 3.1. OrderProduct
+
+**File**: `lib/data/models/product/order_product.dart`
+
+**Fields**:
+```dart
+final String id;
+final String? avatar;
+final String? titleVi;
+final String? titleEn;
+final String? shortName;
+final String? barcode;
+final String? sku;
+final String? measureUnit;
+final num price;
+final num costPrice;
+final num originalPrice;
+final num wholesalePrice;
+final num slotBuy;
+final List<ProductVariant> productVariants;
+final num availableQuantity;
+```
+
+**Helper Methods**:
+- `displayName`: `titleVi ?? titleEn ?? shortName ?? 'Sản phẩm'`
+- `displayUnit`: `measureUnit ?? ''`
+- `hasVariants`: `productVariants.length > 1` (⚠️ Cần >= 2 variants)
+- `firstVariant`: `productVariants.first`
+
+**Parsing**:
+- `fromMap()`: Có try-catch với error logging
+- `toMap()`: Convert to `Map<String, dynamic>`
+- `toJson()`: JSON string encoding
+
+### 3.2. ProductVariant
+
+**File**: `lib/data/models/product/product_variant.dart`
+
+**Fields**:
+```dart
+final String id;
+final List<ProductVariantOption> options;
+final String? imageVariant;
+final double price;
+final double originalPrice;
+final double costPrice;
+final double wholesalePrice;
+final double? promotion;
+final double inventory;
+final String? sku;
+final String? barcode;
+final String availableQuantity; // String format
+final String status;
+```
+
+**ProductVariantOption**:
+```dart
+final String name;
+final String value;
+```
+
+**Parsing**:
+- `availableQuantity`: Lưu dạng String, cần `double.tryParse()` khi sử dụng
+- `price`: Convert từ `num` sang `double`
+
+---
+
+## 🌐 4. Network Layer
+
+### 4.1. NetworkCommon
+
+**File**: `lib/data/network/network_common.dart`
+
+**Dio Instances**:
+- `dio`: Base API (`NetworkUrl.baseURL`)
+- `authDio`: Auth Service (`NetworkUrl.authBaseURL`)
+- `coreDio`: Core Service (`NetworkUrl.coreBaseURL`) ⭐ **MỚI THÊM**
+
+**coreDio Configuration**:
+- Base URL: `https://stg-gw.wowi.cafe/core/api/v1`
+- Timeout: 180000ms
+- Interceptors:
+  - PrettyDioLogger (commented out)
+  - Auth interceptor (Bearer token)
+  - Response decoder
+  - Error handler (401 → logout)
+
+### 4.2. NetworkUrl
+
+**File**: `lib/data/network/network_url.dart`
+
+**OrderProduct Endpoint**:
+```dart
+class _OrderProduct {
+  static const String _route = '/company/product/order/filter';
+  String filter({
+    int limit = 10,
+    int offset = 0,
+    String? keyword,
+    String? branchId,
+  })
+}
+```
+
+**URL Format**:
+```
+/company/product/order/filter?limit=20&offset=0&keyword=xxx&branchId=xxx
+```
+
+### 4.3. OrderMiddleware
+
+**File**: `lib/data/middlewares/order_middleware.dart`
+
+**Method**: `getProductsForOrder()`
+```dart
+Future<ResponseState> getProductsForOrder({
+  int limit = 10,
+  int offset = 0,
+  String? keyword,
+  String? branchId,
+}) async {
+  final response = await coreDio.get<NWResponse>(
+    NetworkUrl.orderProduct.filter(...),
+  );
+  
+  // Parse response
+  if (data is Map<String, dynamic>) {
+    count = data['count'] ?? 0;
+    productsData = data['products'] as List<dynamic>?;
+    products = productsData.map((item) => 
+      OrderProduct.fromMap(item as Map<String, dynamic>)
+    ).toList();
+  }
+  
+  return ResponseSuccessState(
+    responseData: {
+      'count': count,
+      'products': products,
+    },
+  );
+}
+```
+
+**API Response Format**:
+```json
+{
+  "count": 100,
+  "products": [
+    {
+      "id": "uuid",
+      "titleVi": "Tên sản phẩm",
+      "avatar": "url",
+      "productVariants": [...],
+      ...
+    }
+  ]
+}
+```
+
+---
+
+## 🔄 5. Routing & Navigation
+
+### 5.1. AppWireframe
+
+**File**: `lib/app/app_wireframe.dart`
+
+**SelectProductsScreen Route**:
+```dart
+SelectProductsScreen.keyName: (context) {
+  final args = ModalRoute.of(context)?.settings.arguments;
+  if (args != null && args is Map) {
+    return SelectProductsScreen(
+      initialProducts: args['initialProducts'] ?? args['products'],
+      branchId: args['branchId'] ?? args['saleBranchId'],
+    );
+  } else if (args != null && args is List) {
+    return SelectProductsScreen(
+      initialProducts: List<Map<String, dynamic>>.from(args),
+    );
+  }
+  return const SelectProductsScreen();
+}
+```
+
+**Navigation từ CreateOrderScreen**:
+```dart
+context.navigator.pushNamed(
+  SelectProductsScreen.keyName,
+  arguments: {
+    'saleBranchId': selectedWarehouse?.id,
+    'products': selectedProducts,
+  },
+).then((result) {
+  if (result != null && result is List) {
+    setState(() {
+      selectedProducts = List<Map<String, dynamic>>.from(result);
+      _updatePaymentSummary();
+    });
+  }
+});
+```
+
+---
+
+## 🗄️ 6. Repository Pattern
+
+### 6.1. OrderRepository
+
+**File**: `lib/data/repositories/order_repository.dart`
+
+**Warehouses Management**:
+```dart
+final BehaviorSubject<List<Warehouse>> _warehouses = BehaviorSubject();
+Stream<List<Warehouse>> get warehousesStream => _warehouses.stream;
+List<Warehouse> get warehouses => _warehouses.valueOrNull ?? [];
+bool get warehousesHasValue => _warehouses.hasValue;
+
+Warehouse? _selectedWarehouse;
+Warehouse? get selectedWarehouse => _selectedWarehouse;
+
+void setWarehouses(List<Warehouse> warehouses) {
+  _warehouses.sink.add(warehouses);
+  // Auto-select default warehouse
+  if (_selectedWarehouse == null && warehouses.isNotEmpty) {
+    final defaultWarehouse = warehouses.firstWhere(
+      (w) => w.isDefault == true,
+      orElse: () => warehouses.first,
+    );
+    _selectedWarehouse = defaultWarehouse;
+  }
+}
+```
+
+---
+
+## 🎨 7. UI Components
+
+### 7.1. _ProductListItem
+
+**File**: `lib/views/order/create_order/components/product_list_item.dart`
+
+**Props**:
+- `product`: OrderProduct
+- `isSelected`: bool
+- `onTap`: VoidCallback
+
+**Display Logic**:
+- `hasVariants`: `product.hasVariants` (length > 1)
+- `displayPrice`: 
+  - Có variants → "Nhiều mức giá"
+  - Không → `priceValue.toInt().toPrice()`
+- `displayImage`: `product.avatar`
+- `inventory`: Variant hoặc product availableQuantity
+
+**Selected State**:
+- Background: `AppColors.primary.withOpacity(0.1)`
+- Border: `AppColors.primary.withOpacity(0.2)` nếu selected
+
+### 7.2. _ProductSearchBar
+
+**File**: `lib/views/order/create_order/components/product_search_bar.dart`
+
+**Props**:
+- `controller`: TextEditingController
+- `onSearchChanged`: Function(String)
+- `onScanBarcode`: VoidCallback
+
+**UI**:
+- Search icon (left)
+- TextField (middle)
+- QR scanner icon (right)
+
+### 7.3. _SelectedProductItem
+
+**File**: `lib/views/order/create_order/components/selected_product_item.dart`
+
+**Note**: Component này có thể không được sử dụng trong UI hiện tại (chỉ hiển thị badge ở header)
+
+---
+
+## 🔧 8. Utilities & Extensions
+
+### 8.1. Price Formatting
+
+**File**: `lib/utils/extension/int.dart`
+```dart
+extension IntExt on int {
+  String toPrice() {
+    // Format: 87000 => "87.000đ"
+    final format = NumberFormat("#,##0", "vi_VN");
+    return "${format.format(this)}${AppConstant.strings.vnd}";
+  }
+}
+```
+
+**File**: `lib/utils/extension/num.dart`
+```dart
+extension NumExt on num {
+  String toPrice() {
+    // Format: 87000.5 => "87.000,5đ"
+    final format = NumberFormat.currency(
+      locale: "vi_VN",
+      symbol: "",
+      decimalDigits: this % 1 == 0 ? 0 : 2,
+    );
+    return "${format.format(this)}${AppConstant.strings.vnd}";
+  }
+}
+```
+
+**Usage trong SelectProductsScreen**:
+- `variant.price.toInt().toPrice()` (convert double → int → price string)
+
+### 8.2. Address Formatting
+
+**File**: `lib/utils/functions/order_function.dart`
+```dart
+String renderBaseAddress(BaseAddress? data) {
+  final addressArray = [
+    data.address,
+    data.ward,
+    data.district,
+    data.province,
+  ];
+  return addressArray
+      .where((item) => item != null && item.toString().trim().isNotEmpty)
+      .map((item) => item.toString().trim())
+      .join(', ');
+}
+```
+
+---
+
+## ⚠️ 9. Known Issues & Notes
+
+### 9.1. Price Format
+- **Issue**: Price được lưu dạng `String` trong `_selectedProducts`
+- **Impact**: Cần convert lại khi tính toán trong `CreateOrderScreen`
+- **Location**: `_addProduct()` line 181: `'price': '$price'`
+
+### 9.2. hasVariants Logic
+- **Current**: `productVariants.length > 1`
+- **Meaning**: Sản phẩm có 1 variant được coi là không có variants
+- **Question**: API có thể trả về sản phẩm với 1 variant không?
+
+### 9.3. Selected Product Detection
+- **Current Logic**:
+```dart
+final isSelected = _selectedProducts.any((p) =>
+    p['productId'] == product.id ||
+    p['variantId'] == (product.firstVariant?.id));
+```
+- **Issue**: Logic này có thể không chính xác nếu sản phẩm có nhiều variants
+- **Should be**: Check cả `productId` VÀ `variantId` cùng lúc
+
+### 9.4. Pagination
+- **Current**: Chỉ load first page (20 items)
+- **Missing**: Scroll to load more functionality
+- **Note**: Code đã có sẵn `_hasMore` và `_loadProducts(loadMore: true)` nhưng chưa trigger
+
+### 9.5. Barcode Scanner
+- **Current**: Chỉ set text vào search field
+- **Missing**: Tự động tìm và select sản phẩm từ barcode result
+
+---
+
+## 📝 10. API Specifications
+
+### 10.1. Get Products for Order
+
+**Endpoint**: `GET /company/product/order/filter`
+
+**Base URL**: `https://stg-gw.wowi.cafe/core/api/v1`
+
+**Headers**:
+```
+Authorization: Bearer {token}
+```
+
+**Query Parameters**:
+- `limit`: int (default: 20)
+- `offset`: int (default: 0)
+- `keyword`: string? (optional, search by name/SKU)
+- `branchId`: string? (optional, filter by warehouse)
+
+**Response**:
+```json
+{
+  "count": 100,
+  "products": [
+    {
+      "id": "uuid",
+      "titleVi": "Tên sản phẩm",
+      "titleEn": null,
+      "shortName": null,
+      "avatar": "image-url",
+      "barcode": "BARCODE",
+      "sku": "SKU",
+      "measureUnit": "KG",
+      "price": 0,
+      "costPrice": 0,
+      "originalPrice": 0,
+      "wholesalePrice": 0,
+      "slotBuy": 2460.9,
+      "productVariants": [
+        {
+          "id": "variant-uuid",
+          "options": [
+            {"name": "Loại", "value": "S16"}
+          ],
+          "imageVariant": "url",
+          "price": 100000,
+          "inventory": 2017,
+          "sku": "N00004",
+          "barcode": "N00004",
+          "availableQuantity": "2017.0",
+          "status": "ACTIVE"
+        }
+      ],
+      "availableQuantity": 2360.9
+    }
+  ]
+}
+```
+
+**Important Notes**:
+- `productVariants`: Array, có thể empty hoặc có nhiều items
+- `availableQuantity` ở variant: String format ("2017.0")
+- `availableQuantity` ở product: num format (2360.9)
+- Giá bán, tồn kho, có thể bán: Sử dụng từ variant nếu có, không thì từ product
+
+---
+
+## 🔄 11. Integration với CreateOrderScreen
+
+### 11.1. Navigation Flow
+
+```dart
+// CreateOrderScreen
+_ProductsSection(
+  products: selectedProducts,
+  onTap: () {
+    context.navigator.pushNamed(
+      SelectProductsScreen.keyName,
+      arguments: {
+        'saleBranchId': selectedWarehouse?.id,
+        'products': selectedProducts,
+      },
+    ).then((result) {
+      if (result != null && result is List) {
+        setState(() {
+          selectedProducts = List<Map<String, dynamic>>.from(result);
+          _updatePaymentSummary();
+        });
+      }
+    });
+  },
+)
+```
+
+### 11.2. Price Calculation
+
+**Current Implementation**:
+```dart
+void _updatePaymentSummary() {
+  setState(() {
+    totalProductPrice = selectedProducts.fold<double>(
+      0,
+      (sum, product) =>
+          sum + (product['price'] ?? 0) * (product['quantity'] ?? 0),
+    );
+    // ⚠️ Issue: product['price'] là String, cần convert
+  });
+}
+```
+
+**Should be**:
+```dart
+totalProductPrice = selectedProducts.fold<double>(
+  0,
+  (sum, product) {
+    final price = num.tryParse('${product['price']}') ?? 0.0;
+    final quantity = product['quantity'] ?? 0;
+    return sum + (price * quantity);
+  },
+);
+```
+
+---
+
+## 🎯 12. Dependencies
+
+### 12.1. Packages Used
+
+```yaml
+dependencies:
+  easy_debounce: ^x.x.x  # Debounce search input
+  loading_animation_widget: ^x.x.x  # Loading animation
+  rxdart: ^x.x.x  # Stream management
+  dio: ^x.x.x  # HTTP client
+  flutter_screenutil: ^x.x.x  # Responsive UI
+  intl: ^x.x.x  # Number formatting
+```
+
+### 12.2. Internal Dependencies
+
+- `zili_coffee/res/res.dart`: Colors, Styles, Constants
+- `zili_coffee/utils/extension/extension.dart`: Extensions
+- `zili_coffee/utils/widgets/widgets.dart`: Custom widgets
+- `zili_coffee/di/dependency_injection.dart`: DI container
+
+---
+
+## 🐛 13. Bug Fixes Applied
+
+### 13.1. Pagination Load More
+- **Fixed**: Line 115 trong `_loadProducts()` đã có `_allProducts.addAll(products)` khi `loadMore = true`
+
+### 13.2. Price Formatting
+- **Fixed**: Sử dụng `priceValue.toInt().toPrice()` thay vì `priceValue.toPrice()` (vì extension `toPrice()` chỉ có cho `int` và `num`, không có cho `double`)
+
+### 13.3. Selected Product Detection Bug
+- **Current**: Logic có thể không chính xác
+- **Location**: Line 435-437 trong `select_products_screen.dart`
+- **Status**: ⚠️ Cần review và fix
+
+---
+
+## 📚 14. Code Patterns
+
+### 14.1. Debounce Pattern
+```dart
+EasyDebounce.cancel('productSearch');
+EasyDebounce.debounce(
+  'productSearch',
+  const Duration(milliseconds: 500),
+  () {
+    // Search logic
+  },
+);
+```
+
+### 14.2. Pagination Pattern
+```dart
+bool _hasMore = true;
+int _currentOffset = 0;
+final int _limit = 20;
+
+Future<void> _loadProducts({bool loadMore = false}) async {
+  if (!loadMore) {
+    _currentOffset = 0;
+  }
+  
+  final result = await apiCall(offset: _currentOffset);
+  
+  if (loadMore) {
+    _allProducts.addAll(products);
+  } else {
+    _allProducts = products;
+  }
+  
+  _currentOffset += products.length;
+  _hasMore = _currentOffset < count;
+}
+```
+
+### 14.3. Variant Selection Pattern
+```dart
+if (product.hasVariants) {
+  _showVariantSelector(product);
+} else {
+  _addProduct(product, null);
+}
+```
+
+---
+
+## 🎨 15. UI/UX Patterns
+
+### 15.1. Loading States
+- Initial load: `LoadingAnimationWidget.flickr`
+- Empty state: Icon + message
+- Error state: `showNotificationDialog`
+
+### 15.2. Selected State
+- Visual indicator: Background color + border
+- Badge: "Đã chọn X sản phẩm" ở header
+- Action: Tap để remove
+
+### 15.3. Variant Selection
+- Bottom sheet với scrollable list
+- Display: Image, Name, Price, Inventory, SKU
+- Disable: Nếu `available <= 0`
+
+---
+
+## 📋 16. TODO / Future Improvements
+
+1. ✅ Fix pagination load more
+2. ⏳ Implement scroll to load more
+3. ⏳ Handle barcode scan result để auto-select product
+4. ⏳ Add product creation screen
+5. ⏳ Fix selected product detection logic
+6. ⏳ Convert price từ String về num khi tính toán
+7. ⏳ Handle edge cases: empty variants, out of stock, etc.
+8. ⏳ Add product filtering by category
+9. ⏳ Add sorting options (price, name, etc.)
+10. ⏳ Add product detail view
+
+---
+
+## 🔍 17. Key Files Reference
+
+### Core Files
+- `lib/views/order/create_order/select_products_screen.dart` - Main screen
+- `lib/data/models/product/order_product.dart` - Product model
+- `lib/data/models/product/product_variant.dart` - Variant model
+- `lib/data/middlewares/order_middleware.dart` - API layer
+- `lib/data/network/network_url.dart` - URL definitions
+- `lib/data/network/network_common.dart` - Dio configuration
+
+### Component Files
+- `lib/views/order/create_order/components/product_list_item.dart`
+- `lib/views/order/create_order/components/product_search_bar.dart`
+- `lib/views/order/create_order/components/selected_product_item.dart`
+
+### Integration Files
+- `lib/views/order/create_order/create_order_screen.dart`
+- `lib/app/app_wireframe.dart`
+- `lib/data/repositories/order_repository.dart`
+- `lib/views/order/entry_order_screen.dart`
+- `lib/views/loading/loading_screen.dart`
+
+### Utility Files
+- `lib/utils/extension/int.dart` - Price formatting
+- `lib/utils/extension/num.dart` - Num extensions
+- `lib/utils/functions/order_function.dart` - Address formatting
+
+---
+
+## 📝 18. Important Notes
+
+1. **Price Storage**: Price được lưu dạng String trong selected products, cần convert khi tính toán
+2. **Variant Logic**: `hasVariants` = `length > 1`, nghĩa là sản phẩm có 1 variant được coi là không có variants
+3. **Available Quantity**: Variant dùng String format, Product dùng num format
+4. **Branch Filtering**: Products được filter theo `branchId` từ selected warehouse
+5. **Debounce**: Search có debounce 500ms để giảm API calls
+6. **Pagination**: Limit 20 items per page, có thể load more (chưa implement UI)
+
+---
+
+**Last Updated**: 2025-01-XX
+**Version**: 1.0.0
+

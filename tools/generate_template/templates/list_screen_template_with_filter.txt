@@ -1,0 +1,159 @@
+// List Screen Template với Filter - Sử dụng ListScreenTemplate pattern
+// LƯU Ý: File này chứa template variables ({{ClassName}}, {{class_name}}, etc.)
+// Các lỗi linter là bình thường và sẽ biến mất sau khi replace placeholders
+
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import '../../bloc/{{class_name}}/{{class_name}}_cubit.dart';
+import '../../bloc/base_cubit.dart';
+import '../../data/models/{{domain}}/{{class_name}}.dart';
+import '../../data/repositories/{{class_name}}_repository.dart';
+import '../../di/dependency_injection.dart';
+import '../../res/res.dart';
+import '../../utils/extension/extension.dart';
+import '../../utils/widgets/widgets.dart';
+import '../common/list_screen_template.dart';
+import '../common/date_selector_field.dart';
+
+class {{ClassName}}ListScreen extends StatefulWidget {
+  const {{ClassName}}ListScreen({super.key});
+  static String keyName = '/{{class_name}}_list';
+
+  @override
+  State<{{ClassName}}ListScreen> createState() => _{{ClassName}}ListScreenState();
+}
+
+class _{{ClassName}}ListScreenState extends State<{{ClassName}}ListScreen> {
+  // Repository và Cubit (inject từ DI)
+  final {{ClassName}}Repository _repository = di<{{ClassName}}Repository>();
+  final {{ClassName}}Cubit _cubit = di<{{ClassName}}Cubit>();
+  DateTime? _startDate;
+  DateTime? _endDate;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListScreenTemplate<{{ClassName}}>(
+      // Required parameters
+      appBarTitle: 'Danh sách {{DisplayName}}',
+      searchHint: 'Tìm kiếm theo tên, code...',
+      
+      // Filter configuration
+      showFilterButton: true,
+      filterConfig: FilterConfig(
+        builder: (context, onApply) {
+          return ColumnWidget(
+            mainAxisSize: MainAxisSize.min,
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+            children: [
+              BottomSheetHeader(
+                title: 'Bộ lọc tìm kiếm',
+                onClose: () => context.navigator.pop(),
+              ),
+              SizedBox(height: 16.h),
+              DateRangeSelectorField(
+                dateRange: _startDate != null && _endDate != null
+                    ? DateTimeRange(start: _startDate!, end: _endDate!)
+                    : null,
+                hint: 'Tùy chọn khoảng thời gian',
+                label: 'khoảng thời gian',
+                onChanged: (range) {
+                  setState(() {
+                    _startDate = range?.start;
+                    _endDate = range?.end;
+                  });
+                },
+              ),
+              SizedBox(height: 20.h),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: EdgeInsets.symmetric(vertical: 14.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  elevation: 0,
+                ),
+                onPressed: onApply,
+                child: Container(
+                  width: double.infinity,
+                  alignment: Alignment.center,
+                  child: Text(
+                    'Tìm kiếm',
+                    style: AppStyles.text.semiBold(
+                      fSize: 14.sp,
+                      color: AppColors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+        onFilterApplied: () {
+          // Apply filter và reload data
+          _cubit.filter{{ClassName}}s(
+            startDate: _startDate,
+            endDate: _endDate,
+          );
+        },
+      ),
+      
+      // List configuration
+      dataStream: _repository.{{class_name}}sStream,
+      totalCount: _repository.total{{ClassName}}s,
+      itemBuilder: (context, item, index) {
+        return Container(
+          margin: EdgeInsets.symmetric(horizontal: 16.w),
+          padding: EdgeInsets.all(10.w),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(10.r),
+            border: Border.all(color: AppColors.greyC0),
+          ),
+          child: _{{ClassName}}ItemCard(item: item),
+        );
+      },
+      emptyMessage: 'Không tìm thấy {{DisplayName}}',
+      
+      // Callbacks (REQUIRED)
+      onSearch: (keyword) {
+        _cubit.filter{{ClassName}}s(keyword: keyword);
+      },
+      onRefresh: () async {
+        await _cubit.get{{ClassName}}s(offset: 0);
+      },
+      onLoadMore: () {
+        final current = _repository.{{class_name}}s;
+        if (current.length >= _repository.total{{ClassName}}s) return true;
+        _cubit.loadMore{{ClassName}}s(offset: current.length);
+        return true;
+      },
+    );
+  }
+}
+
+/// Item Card Widget
+class _{{ClassName}}ItemCard extends StatelessWidget {
+  final {{ClassName}} item;
+
+  const _{{ClassName}}ItemCard({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // TODO: Customize item display
+        Text(
+          item.name ?? item.id ?? 'N/A',
+          style: AppStyles.text.semiBold(
+            fSize: 16.sp,
+            color: AppColors.black3,
+          ),
+        ),
+        // Thêm các fields khác của item ở đây
+      ],
+    );
+  }
+}

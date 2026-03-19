@@ -1,0 +1,12 @@
+<svg width="108" height="110" viewBox="0 0 108 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="lock">
+<path id="Vector" d="M86 50H23C18.0294 50 14 54.104 14 59.1666V91.25C14 96.3126 18.0294 100.417 23 100.417H86C90.9706 100.417 95 96.3126 95 91.25V59.1666C95 54.104 90.9706 50 86 50Z" fill="#346448" stroke="#346448" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_2" d="M32 50.4167V32.0833C32 26.0055 34.3705 20.1765 38.5901 15.8788C42.8097 11.5811 48.5326 9.16667 54.5 9.16667C60.4674 9.16667 66.1903 11.5811 70.4099 15.8788C74.6295 20.1765 77 26.0055 77 32.0833V50.4167" stroke="#346448" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<g id="Group 31">
+<circle id="Ellipse 39" cx="42.5" cy="75.5" r="2.5" fill="white"/>
+<circle id="Ellipse 40" cx="50.5" cy="75.5" r="2.5" fill="white"/>
+<circle id="Ellipse 41" cx="58.5" cy="75.5" r="2.5" fill="white"/>
+<circle id="Ellipse 42" cx="66.5" cy="75.5" r="2.5" fill="white"/>
+</g>
+</g>
+</svg>

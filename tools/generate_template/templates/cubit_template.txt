@@ -1,0 +1,136 @@
+// Cubit Template - Copy và customize cho feature mới
+// LƯU Ý: File này chứa template variables ({{ClassName}}, {{class_name}}, etc.)
+// Các lỗi linter là bình thường và sẽ biến mất sau khi replace placeholders
+
+import 'package:equatable/equatable.dart';
+import 'package:zili_coffee/bloc/base_cubit.dart';
+import 'package:zili_coffee/data/middlewares/middlewares.dart';
+import 'package:zili_coffee/data/models/{{domain}}/{{class_name}}.dart';
+import 'package:zili_coffee/data/network/network_response_state.dart';
+import 'package:zili_coffee/data/repositories/{{class_name}}_repository.dart';
+import 'package:zili_coffee/di/dependency_injection.dart';
+
+part '{{class_name}}_state.dart';
+
+class {{ClassName}}Cubit extends BaseCubit<{{ClassName}}State> {
+  {{ClassName}}Cubit() : super({{ClassName}}Initial());
+
+  final _{{class_name}}Middleware = di<{{ClassName}}Middleware>();
+  final _{{class_name}}Repo = di<{{ClassName}}Repository>();
+
+  /// Get list of {{class_name}}s
+  ///
+  /// Parameters:
+  /// - keyword: Search keyword (optional)
+  /// - limit: Number of items per page (default: 10)
+  /// - offset: Pagination offset (default: 0)
+  ///
+  /// States:
+  /// - Loading{{ClassName}}State: Loading
+  /// - Loaded{{ClassName}}State: Success with data
+  /// - Failed{{ClassName}}State: Error
+  Future<void> get{{ClassName}}s({
+    String? keyword,
+    int limit = 10,
+    int offset = 0,
+  }) async {
+    emit(const Loading{{ClassName}}State());
+    final result = await _{{class_name}}Middleware.get{{ClassName}}s(
+      keyword: keyword,
+      limit: limit,
+      offset: offset,
+    );
+    if (result is ResponseSuccessListState<List<{{ClassName}}>>) {
+      final items = result.responseData;
+      _{{class_name}}Repo.{{class_name}}s.sink.add(items);
+      _{{class_name}}Repo.total{{ClassName}}s = result.total;
+      emit(Loaded{{ClassName}}State());
+    } else if (result is ResponseFailedState) {
+      emit(Failed{{ClassName}}State(error: result));
+    }
+  }
+
+  /// Get {{class_name}} by ID
+  ///
+  /// Parameters:
+  /// - id: {{ClassName}} ID (required)
+  ///
+  /// States:
+  /// - Loading{{ClassName}}State: Loading
+  /// - {{ClassName}}LoadedState: Success with data
+  /// - Failed{{ClassName}}State: Error
+  Future<void> get{{ClassName}}ById(String id) async {
+    emit(const Loading{{ClassName}}State());
+    final result = await _{{class_name}}Middleware.get{{ClassName}}ById(id: id);
+    if (result is ResponseSuccessState<{{ClassName}}>) {
+      emit({{ClassName}}LoadedState({{class_name}}: result.responseData));
+    } else if (result is ResponseFailedState) {
+      emit(Failed{{ClassName}}State(error: result));
+    }
+  }
+
+  /// Create {{class_name}}
+  ///
+  /// Parameters:
+  /// - data: Map containing {{class_name}} data
+  ///
+  /// States:
+  /// - Loading{{ClassName}}State: Loading
+  /// - Message{{ClassName}}State: Success with message
+  /// - Failed{{ClassName}}State: Error
+  Future<void> create{{ClassName}}(Map<String, dynamic> data) async {
+    emit(const Loading{{ClassName}}State());
+    final result = await _{{class_name}}Middleware.create{{ClassName}}(data: data);
+    if (result is ResponseSuccessState<{{ClassName}}>) {
+      emit(Message{{ClassName}}State(message: 'Tạo thành công'));
+    } else if (result is ResponseFailedState) {
+      emit(Failed{{ClassName}}State(error: result));
+    }
+  }
+
+  /// Update {{class_name}}
+  ///
+  /// Parameters:
+  /// - id: {{ClassName}} ID (required)
+  /// - data: Map containing updated {{class_name}} data
+  ///
+  /// States:
+  /// - Loading{{ClassName}}State: Loading
+  /// - Message{{ClassName}}State: Success with message
+  /// - Failed{{ClassName}}State: Error
+  Future<void> update{{ClassName}}({
+    required String id,
+    required Map<String, dynamic> data,
+  }) async {
+    emit(const Loading{{ClassName}}State());
+    final result = await _{{class_name}}Middleware.update{{ClassName}}(
+      id: id,
+      data: data,
+    );
+    if (result is ResponseSuccessState<{{ClassName}}>) {
+      emit(Message{{ClassName}}State(message: 'Cập nhật thành công'));
+    } else if (result is ResponseFailedState) {
+      emit(Failed{{ClassName}}State(error: result));
+    }
+  }
+
+  /// Delete {{class_name}}
+  ///
+  /// Parameters:
+  /// - id: {{ClassName}} ID (required)
+  ///
+  /// States:
+  /// - Loading{{ClassName}}State: Loading
+  /// - Message{{ClassName}}State: Success with message
+  /// - Failed{{ClassName}}State: Error
+  Future<void> delete{{ClassName}}(String id) async {
+    emit(const Loading{{ClassName}}State());
+    final result = await _{{class_name}}Middleware.delete{{ClassName}}(id: id);
+    if (result is ResponseSuccessState) {
+      emit(Message{{ClassName}}State(message: 'Xóa thành công'));
+    } else if (result is ResponseFailedState) {
+      emit(Failed{{ClassName}}State(error: result));
+    }
+  }
+}
+

@@ -1,0 +1,21 @@
+# Generates native code to customize splash screen (will removed default white splash screen)
+flutter_native_splash:
+  background_image: assets/ios/launch_background/bg_launch_screen_1x.png # Set for bg splash screen
+  image: assets/ios/ic_launcher.png
+  fullscreen: true # To hide the notification bar
+  android: true
+  ios: false
+  web: false
+  # [Android 12 and later] must be configured specifically in the `android_12` section.
+  android_12:
+    # color: "#FAFAFA"
+    color: "#FFFFFF"
+    color_dark: "#FFFFFF"
+    image: assets/android/pad_logo_768.png # icon image
+    image_dark: assets/android/pad_logo_768.png
+    icon_background_color: "#FFFFFF" # App icon background color
+    icon_background_color_dark: "#FFFFFF"
+
+# Run:
+#   - dart run flutter_native_splash:remove
+#   - dart run flutter_native_splash:create --path=flutter_native_splash.yaml

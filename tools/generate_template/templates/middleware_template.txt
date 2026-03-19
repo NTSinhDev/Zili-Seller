@@ -1,0 +1,209 @@
+// Middleware Template - Copy và customize cho feature mới
+// 
+// Hướng dẫn sử dụng:
+// 1. Copy file này và đổi tên thành {{class_name}}_middleware.dart
+// 2. Thay thế {{ClassName}} bằng Model class của bạn
+// 3. Thay thế {{class_name}} bằng feature name trong NetworkUrl
+// 4. Thay thế 'items' bằng key trong API response (ví dụ: products, items)
+// 5. Thay thế import path để trỏ đến Model của bạn
+//
+// LƯU Ý: File này chứa template variables ({{ClassName}}, {{class_name}}, etc.)
+// Các lỗi linter là bình thường và sẽ biến mất sau khi replace placeholders
+
+import 'package:dio/dio.dart';
+import 'package:zili_coffee/data/middlewares/base_middleware.dart';
+import 'package:zili_coffee/data/models/{{domain}}/{{class_name}}.dart';
+import 'package:zili_coffee/data/network/network_response_object.dart';
+import 'package:zili_coffee/data/network/network_response_state.dart';
+import 'package:zili_coffee/data/network/network_url.dart';
+
+class {{ClassName}}Middleware extends BaseMiddleware {
+  /// [MÔ TẢ METHOD] - List API
+  /// 
+  /// Gọi REST API và trả về List<{{ClassName}}> nếu thành công
+  /// 
+  /// Parameters:
+  /// - limit: Số lượng items mỗi trang (default: 20)
+  /// - offset: Pagination offset (default: 0)
+  /// - keyword: Từ khóa tìm kiếm (optional)
+  /// 
+  /// Returns:
+  /// - ResponseState chứa Map với 'count' và 'items': List<{{ClassName}}>
+  Future<ResponseState> get{{ClassName}}s({
+    int limit = 20,
+    int offset = 0,
+    String? keyword,
+  }) async {
+    try {
+      final response = await coreDio.get<NWResponse>(
+        NetworkUrl.{{class_name}}.filter(),
+        queryParameters: {
+          'limit': limit,
+          'offset': offset,
+          if (keyword != null && keyword.isNotEmpty) 'keyword': keyword,
+        },
+        cancelToken: cancelToken,
+      );
+
+      final resultData = response.data;
+      if (resultData is NWResponseSuccess) {
+        final data = resultData.data;
+        int count = 0;
+        List<{{ClassName}}> models = [];
+
+        if (data is Map<String, dynamic>) {
+          count = data['count'] ?? 0;
+          final itemsData = data['items'] as List<dynamic>?;
+          if (itemsData != null) {
+            models = itemsData
+                .map((item) => {{ClassName}}.fromMap(item as Map<String, dynamic>))
+                .toList();
+          }
+        }
+
+        return ResponseSuccessListState(
+          statusCode: response.statusCode ?? -1,
+          responseData: models,
+          total: count,
+        );
+      }
+
+      if (resultData is NWResponseFailed) {
+        return ResponseFailedState.fromNWResponse(resultData);
+      }
+
+      return ResponseFailedState.unknownError();
+    } on DioException catch (e) {
+      return handleResponseFailedState(e);
+    }
+  }
+
+  /// [MÔ TẢ METHOD] - Get by ID
+  /// 
+  /// Gọi REST API và trả về {{ClassName}} nếu thành công
+  Future<ResponseState> get{{ClassName}}ById({
+    required String id,
+  }) async {
+    try {
+      final response = await coreDio.get<NWResponse>(
+        NetworkUrl.{{class_name}}.get(id: id),
+        cancelToken: cancelToken,
+      );
+
+      final resultData = response.data;
+      if (resultData is NWResponseSuccess) {
+        final data = resultData.data;
+        final model = {{ClassName}}.fromMap(data as Map<String, dynamic>);
+
+        return ResponseSuccessState(
+          statusCode: response.statusCode ?? -1,
+          responseData: model,
+        );
+      }
+
+      if (resultData is NWResponseFailed) {
+        return ResponseFailedState.fromNWResponse(resultData);
+      }
+
+      return ResponseFailedState.unknownError();
+    } on DioException catch (e) {
+      return handleResponseFailedState(e);
+    }
+  }
+
+  /// [MÔ TẢ METHOD] - Create
+  /// 
+  /// Gọi REST API POST và trả về {{ClassName}} nếu thành công
+  Future<ResponseState> create{{ClassName}}({
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      final response = await coreDio.post<NWResponse>(
+        NetworkUrl.{{class_name}}.create(),
+        data: data,
+        cancelToken: cancelToken,
+      );
+
+      final resultData = response.data;
+      if (resultData is NWResponseSuccess) {
+        final responseData = resultData.data;
+        final model = {{ClassName}}.fromMap(responseData as Map<String, dynamic>);
+
+        return ResponseSuccessState(
+          statusCode: response.statusCode ?? -1,
+          responseData: model,
+        );
+      }
+
+      if (resultData is NWResponseFailed) {
+        return ResponseFailedState.fromNWResponse(resultData);
+      }
+
+      return ResponseFailedState.unknownError();
+    } on DioException catch (e) {
+      return handleResponseFailedState(e);
+    }
+  }
+
+  /// [MÔ TẢ METHOD] - Update
+  Future<ResponseState> update{{ClassName}}({
+    required String id,
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      final response = await coreDio.put<NWResponse>(
+        NetworkUrl.{{class_name}}.update(id: id),
+        data: data,
+        cancelToken: cancelToken,
+      );
+
+      final resultData = response.data;
+      if (resultData is NWResponseSuccess) {
+        final responseData = resultData.data;
+        final model = {{ClassName}}.fromMap(responseData as Map<String, dynamic>);
+
+        return ResponseSuccessState(
+          statusCode: response.statusCode ?? -1,
+          responseData: model,
+        );
+      }
+
+      if (resultData is NWResponseFailed) {
+        return ResponseFailedState.fromNWResponse(resultData);
+      }
+
+      return ResponseFailedState.unknownError();
+    } on DioException catch (e) {
+      return handleResponseFailedState(e);
+    }
+  }
+
+  /// [MÔ TẢ METHOD] - Delete
+  Future<ResponseState> delete{{ClassName}}({
+    required String id,
+  }) async {
+    try {
+      final response = await coreDio.delete<NWResponse>(
+        NetworkUrl.{{class_name}}.delete(id: id),
+        cancelToken: cancelToken,
+      );
+
+      final resultData = response.data;
+      if (resultData is NWResponseSuccess) {
+        return ResponseSuccessState(
+          statusCode: response.statusCode ?? -1,
+          responseData: {'success': true},
+        );
+      }
+
+      if (resultData is NWResponseFailed) {
+        return ResponseFailedState.fromNWResponse(resultData);
+      }
+
+      return ResponseFailedState.unknownError();
+    } on DioException catch (e) {
+      return handleResponseFailedState(e);
+    }
+  }
+}
+

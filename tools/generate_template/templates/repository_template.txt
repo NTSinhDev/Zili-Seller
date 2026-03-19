@@ -1,0 +1,22 @@
+// Repository Template - Copy và customize cho feature mới
+// LƯU Ý: File này chứa template variables ({{ClassName}}, {{class_name}}, etc.)
+// Các lỗi linter là bình thường và sẽ biến mất sau khi replace placeholders
+
+import 'dart:async';
+
+import 'package:rxdart/rxdart.dart';
+import '../models/{{domain}}/{{class_name}}.dart';
+import 'base_repository.dart';
+
+class {{ClassName}}Repository extends BaseRepository {
+  final BehaviorSubject<List<{{ClassName}}>> {{class_name}}s = BehaviorSubject();
+  int total{{ClassName}}s = 0;
+
+  @override
+  Future<void> clean() async {
+    {{class_name}}s.drain(null);
+    {{class_name}}s.sink.add([]);
+    total{{ClassName}}s = 0;
+  }
+}
+

@@ -1,0 +1,4 @@
+enum RegionType {
+  preMerger,
+  postMerger,
+}
