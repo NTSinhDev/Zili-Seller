@@ -1,6 +1,10 @@
 # Zili Coffee Seller App
 
 A sales management application supporting revenue analytics, multi-channel order management (Website, Facebook, Shopee), customer management, product quotation, inventory management, and production warehouse operations.
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/6254b9a4-c944-4de7-a559-e9bf190687f3"
+       style="width: 50%; max-width: 704px;" />
+</div>
 
 ## Release notes / Changelog
 See `CHANGELOG.md` for the full release history and upcoming changes.
